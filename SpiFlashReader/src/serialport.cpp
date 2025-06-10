@@ -1,6 +1,7 @@
 #include "serialport.h"
 //#include <qdebug.h>
 #include <QDebug>
+#include <QThread>
 
 serialPort::serialPort(QObject *parent) :
     QObject(parent)
@@ -105,6 +106,8 @@ void serialPort::writeToPort1(QByteArray data, int *startAdr1, int *stopAdr1)
     startAdr = *startAdr1;
     stopAdr = *stopAdr1;
 
+    qDebug () << startAdr << stopAdr;
+
     if (startAdr > stopAdr) {
         stopAdr = startAdr + 1;
     }
@@ -113,4 +116,24 @@ void serialPort::writeToPort1(QByteArray data, int *startAdr1, int *stopAdr1)
         port1.write(data);
     }
 
+}
+
+void serialPort::writedataToPort1(QByteArray data)
+{
+    dataRX.clear();
+    int ncykl = data.size() / 32;
+    int last = data.size() % 32;
+    int i = 0;
+
+    if(port1.isOpen()) {
+
+       while(i < ncykl) {
+           port1.write((data.data() + i*32),32);
+           i++;
+           QThread::msleep(20);
+       }
+
+        port1.write((data.data() + ncykl*32),last);
+
+    }
 }

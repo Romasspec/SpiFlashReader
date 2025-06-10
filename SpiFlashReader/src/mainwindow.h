@@ -45,6 +45,7 @@ signals:
 
     void savesettings(Settings *settingsPort2);
     void writeData(QByteArray data, int *startAdr, int *stopAdr);
+    void writeData1(QByteArray data);
 
 private slots:
     void Print(QByteArray data);

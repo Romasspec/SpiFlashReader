@@ -22,6 +22,7 @@
 #include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QProgressBar>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QSpinBox>
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QToolBar>
 #include <QtWidgets/QWidget>
@@ -56,6 +57,7 @@ public:
     QLineEdit *StopAdr;
     QPushButton *SaveFile;
     QPushButton *LoadFile;
+    QSpinBox *spinBox;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -152,6 +154,11 @@ public:
         LoadFile = new QPushButton(centralWidget);
         LoadFile->setObjectName(QStringLiteral("LoadFile"));
         LoadFile->setGeometry(QRect(280, 220, 75, 23));
+        spinBox = new QSpinBox(centralWidget);
+        spinBox->setObjectName(QStringLiteral("spinBox"));
+        spinBox->setGeometry(QRect(370, 220, 71, 22));
+        spinBox->setMaximum(1000);
+        spinBox->setValue(10);
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));

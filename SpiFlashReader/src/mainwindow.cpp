@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->FlowControlBox->addItem(QLatin1String("RTS/CTS"), QSerialPort::HardwareControl);
     ui->FlowControlBox->addItem(QLatin1String("XON/XOFF"), QSerialPort::SoftwareControl);
     ui->StartAdr->setText("0x000000");
-    ui->StopAdr->setText("0x000400");
+    ui->StopAdr->setText("0x000064");
     startAdr = ui->StartAdr->text().toInt(0,16);
     stopAdr = ui->StopAdr->text().toInt(0,16);
     QThread *thread1 = new QThread();
@@ -62,6 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(serialPort1, SIGNAL(finished_Port()), thread1, SLOT(deleteLater()));
     connect(serialPort1, SIGNAL(outPort(QByteArray)),this, SLOT(Print(QByteArray)));
     connect(this, SIGNAL(writeData(QByteArray, int*, int*)), serialPort1, SLOT(writeToPort1(QByteArray, int*, int*)));
+    connect(this, SIGNAL(writeData1(QByteArray)),serialPort1, SLOT(writedataToPort1(QByteArray)));
     connect(ui->SendButton, SIGNAL(clicked(bool)), this, SLOT(sendData()));
     connect(serialPort1, SIGNAL(outProgress(int)), ui->progressBar, SLOT(setValue(int)));
     connect(ui->StartAdr, SIGNAL(editingFinished()), this, SLOT(valid_StartAdr()), Qt::UniqueConnection);
@@ -235,6 +236,7 @@ void MainWindow::saveToFile()
         out.writeRawData(saveBuf, saveBuf.size());
 //        qDebug () << QDataStream::writeRawData(saveBuf, saveBuf.size());
     }
+    ui->progressBar->setValue(0);
 }
 
 void MainWindow::loadToFile()
@@ -253,10 +255,11 @@ void MainWindow::loadToFile()
 //        qDebug () << size;
         QDataStream in(&file);
         in.setVersion(QDataStream::Qt_5_5);
-        qDebug () << file.size();
+//        qDebug () << file.size();
         readBuf.clear();
-        char buf[1000];
-        in.readRawData(buf, file.size());
+        int fileSize = file.size();
+        char *buf = new char [fileSize];
+        in.readRawData(buf, fileSize);
 //        qDebug () << QDataStream::writeRawData(saveBuf, saveBuf.size());
 
         QByteArray BUF_TX;
@@ -269,19 +272,17 @@ void MainWindow::loadToFile()
         BUF_TX[2] = (uint8_t)((startAdr)&0xFF);
         BUF_TX[3] = (uint8_t)((startAdr>>8)&0xFF);
         BUF_TX[4] = (uint8_t)((startAdr>>16)&0xFF);
-        BUF_TX[5] = (uint8_t)((stopAdr)&0xFF);              //количесво байт
-        BUF_TX[6] = (uint8_t)((stopAdr>>8)&0xFF);
-        BUF_TX[7] = (uint8_t)((stopAdr>>16)&0xFF);
-
+        BUF_TX[5] = (uint8_t)((fileSize)&0xFF);              //количесво байт
+        BUF_TX[6] = (uint8_t)((fileSize>>8)&0xFF);
+        BUF_TX[7] = (uint8_t)((fileSize>>16)&0xFF);
+        stopAdr = startAdr + fileSize;
         writeData(BUF_TX, &startAdr, &stopAdr);
 
         for(int i = 0; i < file.size(); i++) {
             readBuf.append(buf[i]);
         }
-        int i=0;
-        writeData(readBuf, &i, &stopAdr);
 
-
+        writeData1(readBuf);
 
     }
 }

@@ -6,6 +6,8 @@ $ cat .gitignore
 *.uvopt
 *.Debug
 *.Release
+*.pro.user
+.Makefile
 bin/
 Project/
 listings/

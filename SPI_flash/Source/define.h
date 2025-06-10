@@ -51,7 +51,7 @@
 #define UART_RX_MESS	4
 #define START_UART_TX_MESS	5
 
-#define BUFFSIZE			64
+#define BUFFSIZE			32
 #define LENGHT_FRAME_RX_UART	8
 
 #define START_BYTE       0x55

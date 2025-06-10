@@ -39,6 +39,7 @@ public slots:
     void startPort1();
     void writeSettingsPort1(Settings *settingsPortPtr);
     void writeToPort1(QByteArray data, int *startAdr, int *stopAdr);
+    void writedataToPort1(QByteArray data);
 
 private slots:
     void handleError(QSerialPort::SerialPortError error);
