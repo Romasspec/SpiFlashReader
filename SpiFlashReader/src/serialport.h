@@ -30,7 +30,7 @@ private:
 signals:
     void finished_Port(); //Сигнал закрытия класса
     void error_(QString err);//Сигнал ошибок порта
-    void outPort(QByteArray dataout);
+    void outPort(QByteArray *dataout);
     void outProgress(int progres1);
 
 public slots:

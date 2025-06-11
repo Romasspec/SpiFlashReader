@@ -48,7 +48,7 @@ signals:
     void writeData1(QByteArray data);
 
 private slots:
-    void Print(QByteArray data);
+    void Print(QByteArray *data);
     void BtnSave_clicked();
     void Btn_Serch_clicked();
     void sendData();

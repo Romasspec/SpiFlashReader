@@ -6,7 +6,7 @@ $ cat .gitignore
 *.uvopt
 *.Debug
 *.Release
-*.pro.user
+*.user
 .Makefile
 bin/
 Project/
@@ -14,4 +14,4 @@ listings/
 Objects/
 debug/
 release/
-
+SpiFlashReader/SpiFlashReader.pro.user

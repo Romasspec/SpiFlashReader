@@ -60,7 +60,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(serialPort1,SIGNAL(finished_Port()),thread1, SLOT(quit()));
     connect(thread1, SIGNAL(finished()), serialPort1, SLOT(deleteLater()));
     connect(serialPort1, SIGNAL(finished_Port()), thread1, SLOT(deleteLater()));
-    connect(serialPort1, SIGNAL(outPort(QByteArray)),this, SLOT(Print(QByteArray)));
+    connect(serialPort1, SIGNAL(outPort(QByteArray*)),this, SLOT(Print(QByteArray*)));
     connect(this, SIGNAL(writeData(QByteArray, int*, int*)), serialPort1, SLOT(writeToPort1(QByteArray, int*, int*)));
     connect(this, SIGNAL(writeData1(QByteArray)),serialPort1, SLOT(writedataToPort1(QByteArray)));
     connect(ui->SendButton, SIGNAL(clicked(bool)), this, SLOT(sendData()));
@@ -77,7 +77,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::Print(QByteArray data)
+void MainWindow::Print(QByteArray *data)
 {
 //    ui->console->textCursor().insertText(data+'\r');
 //    ui->console->moveCursor(QTextCursor::End);//Scroll
@@ -88,7 +88,7 @@ void MainWindow::Print(QByteArray data)
     //qDebug () << data.toHex();
 
     QByteArray rxBuf;
-    rxBuf += data;
+    rxBuf += *data;
     saveBuf += rxBuf;
     size1 = rxBuf.size();
 //     qDebug () << size1;

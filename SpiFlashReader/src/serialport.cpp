@@ -94,7 +94,7 @@ void serialPort::readInPort1()
 //    outPort(data);
     progres = (dataRX.size()* 100 )/ (stopAdr - startAdr) ;
     if (progres >= 100) {
-        outPort(dataRX);
+        outPort(&dataRX);
     }
     outProgress(progres);
 }
