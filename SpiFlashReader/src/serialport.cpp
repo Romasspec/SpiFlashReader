@@ -69,6 +69,7 @@ void serialPort::writeSettingsPort1(Settings *settingsPortPtr)
     settingsPort1.stopBits = settingsPortPtr->stopBits;
     settingsPort1.flowControl = settingsPortPtr->flowControl;
     qDebug("Настройки приняты");
+    error_(" Настройки приняты");
 //    qDebug () << settingsPort1.name;
 //    qDebug () << settingsPort1.baudRate;
 //    qDebug () << settingsPort1.dataBits;
@@ -97,15 +98,17 @@ void serialPort::readInPort1()
         if (progres >= 100) {
             outPort(&dataRX);
         }
-        outProgress(progres);
+        outProgress(progres);        
     } else {
         qDebug () << "readtemp";
         tempdataRX += port1.readAll();
         qDebug () << tempdataRX;
         if(tempdataRX.toStdString() == "NEXT") {
             writedatanext();
+        } else if (tempdataRX.toStdString() == "FINISH") {
+            error_("Запись завершена");
+             read_fl = 1;
         }
-
     }
 
 }
@@ -115,14 +118,14 @@ void serialPort::writeToPort1(QByteArray data, int *startAdr1, int *stopAdr1)
     progres = 0;
     dataRX.clear();
     startAdr = *startAdr1;
-    stopAdr = *stopAdr1;
+    stopAdr = *stopAdr1 + 1;
     read_fl = 1;
 
     qDebug () << startAdr << stopAdr;
 
-    if (startAdr > stopAdr) {
-        stopAdr = startAdr + 1;
-    }
+//    if (startAdr > stopAdr) {
+//        stopAdr = startAdr + 1;
+//    }
 
     if(port1.isOpen()) {
         port1.write(data);
@@ -153,7 +156,7 @@ void serialPort::writedatanext()
            //qDebug () << *(dataTX.data() + (32*5));
            nextbyte++;
        } else {
-          read_fl = 1;
+          //read_fl = 1;
           dataRX.clear();
           port1.write(dataTX.data() + (ncykl*32),last);
           end = last;

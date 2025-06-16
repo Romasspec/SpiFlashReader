@@ -39,14 +39,38 @@ float Skor_kp;
 float ACoef[3], BCoef[3], x[3], y[3];
 uint8_t RX_BUF[BUFFSIZE], state_RX, RX_BUF_DATA[LENGHT_FRAME_RX_UART-1];
 uint32_t adr_write, lenght_write;
-uint8_t buffer_test[2030] = {0};
+uint8_t buffer_test[2050] = {0};
 
 
 uint16_t buf[720];
 uint16_t *bufpr, *bufpr_end, *bufpr_rend;
 uint16_t timer1;
 
+void sst25vf016b_EraseSector_2Kb_RAM(void)
+{
+	for(uint16_t i = 0; i<2050; i++) {
+		buffer_test[i] = 0x00;
+	}
+}
 
+uint8_t sst25vf016b_Write_buf_RAM(uint32_t addr, uint8_t *buf, uint32_t length)
+{
+	for(uint32_t i = 0; i<length; i++) {
+		buffer_test[addr + i] = buf[i];
+	}
+
+	return 0;
+}
+
+uint8_t sst25vf016b_Read_RAM(uint32_t addr, uint8_t *data, uint32_t nbytes)
+{
+	uint32_t i;							
+	for(i=0; i<nbytes; i++) {
+		data[i] = buffer_test[addr+i];		
+	}
+	
+	return 0;
+}
 void uart_send_message (uint8_t *data, uint16_t lenght)
 {	
 	for (uint16_t i = 0; i < lenght; i++)
@@ -239,29 +263,20 @@ void task_m1 ()
 				{
 					uint8_t buf[TX_BUF_SIZE];
 					uint32_t adr = (RX_BUF_DATA[3]<<16)|(RX_BUF_DATA[2]<<8)|RX_BUF_DATA[1];
-					uint32_t nbyte = ((RX_BUF_DATA[6]<<16)|(RX_BUF_DATA[5]<<8)|(RX_BUF_DATA[4])) - adr;
+					uint32_t nbyte = ((RX_BUF_DATA[6]<<16)|(RX_BUF_DATA[5]<<8)|(RX_BUF_DATA[4])) - adr + 1;
 //					uart_send_message((uint8_t*) (&nbyte), 1);
 					
-					//uint16_t i=0;
 					while (nbyte>0)
-					{
-					//	nKbyte = nbyte / 1024;
-					//	nbyte = nbyte % 1024;
+					{					
 						if (nbyte > TX_BUF_SIZE) {
 							sst25vf016b_Read(adr, buf, TX_BUF_SIZE);
-							
-//							for(i=0; i<TX_BUF_SIZE; i++) {
-//								buf[i] = buffer_test[adr+i];
-//							}
-							
+							//sst25vf016b_Read_RAM(adr, buf, TX_BUF_SIZE);							
 							uart_send_message((uint8_t*) (buf), TX_BUF_SIZE);							
 							nbyte -= TX_BUF_SIZE;
 							adr+=TX_BUF_SIZE;
 						} else {
-//							for (i=0; i<nbyte; i++) {
-//								buf[i] = buffer_test[adr+i];
-//							}
 							sst25vf016b_Read(adr, buf, nbyte);
+							//sst25vf016b_Read_RAM(adr, buf, nbyte);
 							uart_send_message((uint8_t*) (buf), nbyte);
 							nbyte = 0;
 						}
@@ -312,7 +327,7 @@ void task_m1 ()
 				}
 				else if (RX_BUF_DATA[0] == 0x11)
 				{
-									
+					sst25vf016b_EraseSector_2Kb_RAM();
 				}
 				
 				else if (RX_BUF_DATA[0] == 0x12)
@@ -484,11 +499,9 @@ void task_m3 ()
 			RX_BUF [rxByte++] = UART_ReceiveData (MDR_UART2);
 			
 			if (rxByte == BUFFSIZE) {
-				rxByte = 0;				
-//				for(uint8_t j = 0; j<BUFFSIZE; j++) {
-//					buffer_test[adr_write + j + BUFFSIZE*i] = RX_BUF[j];
-//				}				
+				rxByte = 0;			
 				sst25vf016b_Write_buf(adr_write + BUFFSIZE*i, RX_BUF, BUFFSIZE);
+				//sst25vf016b_Write_buf_RAM(adr_write + BUFFSIZE*i, RX_BUF, BUFFSIZE);
 				i++;
 				if ((i < ncykl) || (last != 0)) {
 					uart_send_message ((uint8_t*)("NEXT"),4);
@@ -505,10 +518,8 @@ void task_m3 ()
 			
 			if (rxByte == last) {
 				rxByte = 0;
-//				for(uint8_t j = 0; j<last; j++) {
-//					buffer_test[adr_write + j + BUFFSIZE*ncykl] = RX_BUF[j];
-//				}
 				sst25vf016b_Write_buf(adr_write + BUFFSIZE*ncykl, RX_BUF, last);
+//				sst25vf016b_Write_buf_RAM(adr_write + BUFFSIZE*ncykl, RX_BUF, last);
 			}
 			i++;
 		}
@@ -516,6 +527,7 @@ void task_m3 ()
 	}
 	sst25vf016b_GlobalProtect();
 	i=lenght_write;
+	uart_send_message ((uint8_t*)("FINISH"),6);
 //	if (i > 1030) {
 //		i=1030;
 //	}
