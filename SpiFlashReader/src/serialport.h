@@ -22,16 +22,25 @@ public:
     QSerialPort port1;
     Settings settingsPort1;
     int progres;
+    int progresWr;
     int startAdr;
     int stopAdr;
 private:
     QByteArray dataRX;
+    QByteArray dataTX;
+    QByteArray tempdataRX;
+    bool read_fl;
+    int ncykl;
+    int last;
+    int nextbyte;
 
 signals:
     void finished_Port(); //Сигнал закрытия класса
     void error_(QString err);//Сигнал ошибок порта
     void outPort(QByteArray *dataout);
     void outProgress(int progres1);
+    void outProgressWrite(int progres1);
+    void nextData();
 
 public slots:
     void disconnectPort1();
@@ -41,9 +50,11 @@ public slots:
     void writeToPort1(QByteArray data, int *startAdr, int *stopAdr);
     void writedataToPort1(QByteArray data);
 
+
 private slots:
     void handleError(QSerialPort::SerialPortError error);
     void readInPort1();
+    void writedatanext();
 
 public:
 

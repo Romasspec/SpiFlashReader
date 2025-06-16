@@ -65,10 +65,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(writeData1(QByteArray)),serialPort1, SLOT(writedataToPort1(QByteArray)));
     connect(ui->SendButton, SIGNAL(clicked(bool)), this, SLOT(sendData()));
     connect(serialPort1, SIGNAL(outProgress(int)), ui->progressBar, SLOT(setValue(int)));
+    connect(serialPort1, SIGNAL(outProgressWrite(int)), ui->progressBarWrite, SLOT(setValue(int)));
     connect(ui->StartAdr, SIGNAL(editingFinished()), this, SLOT(valid_StartAdr()), Qt::UniqueConnection);
     connect(ui->StopAdr, SIGNAL(editingFinished()), this, SLOT(valid_StopAdr()), Qt::UniqueConnection);
     connect(ui->SaveFile,SIGNAL(clicked(bool)), this, SLOT(saveToFile()), Qt::UniqueConnection);
-     connect(ui->LoadFile,SIGNAL(clicked(bool)), this, SLOT(loadToFile()), Qt::UniqueConnection);
+    connect(ui->LoadFile,SIGNAL(clicked(bool)), this, SLOT(loadToFile()), Qt::UniqueConnection);
+    connect(ui->PlayFile, SIGNAL(clicked(bool)), this, SLOT(playData()), Qt::UniqueConnection);
     thread1->start();
 }
 
@@ -136,6 +138,8 @@ void MainWindow::sendData()
     countInByte = 0;
     str1.clear();
     saveBuf.clear();
+    valid_StartAdr();
+    valid_StopAdr();
 
     BUF_TX[0] = START_BYTE;
     BUF_TX[1] = READ_DATA;
@@ -149,10 +153,28 @@ void MainWindow::sendData()
     writeData(BUF_TX, &startAdr, &stopAdr);
 }
 
+void MainWindow::playData()
+{
+    QByteArray BUF_TX;
+    valid_StartAdr();
+    valid_StopAdr();
+
+    BUF_TX[0] = START_BYTE;
+    BUF_TX[1] = PLAY_DATA;
+    BUF_TX[2] = (uint8_t)((startAdr)&0xFF);
+    BUF_TX[3] = (uint8_t)((startAdr>>8)&0xFF);
+    BUF_TX[4] = (uint8_t)((startAdr>>16)&0xFF);
+    BUF_TX[5] = (uint8_t)((stopAdr)&0xFF);
+    BUF_TX[6] = (uint8_t)((stopAdr>>8)&0xFF);
+    BUF_TX[7] = (uint8_t)((stopAdr>>16)&0xFF);
+
+    writeData(BUF_TX, &startAdr, &stopAdr);
+}
+
 void MainWindow::valid_StartAdr()
 {
     //QByteArray data_TX;
-    int data;
+    int data = 0;
     QString string = ui->StartAdr->text();
 
     while (string.length() < 8) {
@@ -185,7 +207,7 @@ void MainWindow::valid_StartAdr()
 void MainWindow::valid_StopAdr()
 {
     //QByteArray data_TX;
-    int data;
+    int data = 0;
     QString string = ui->StopAdr->text();
 
     while (string.length() < 8) {
@@ -266,6 +288,7 @@ void MainWindow::loadToFile()
         countInByte = 0;
         str1.clear();
         saveBuf.clear();
+        valid_StartAdr();
 
         BUF_TX[0] = START_BYTE;
         BUF_TX[1] = WRITE_BUFFER;
@@ -275,6 +298,7 @@ void MainWindow::loadToFile()
         BUF_TX[5] = (uint8_t)((fileSize)&0xFF);              //количесво байт
         BUF_TX[6] = (uint8_t)((fileSize>>8)&0xFF);
         BUF_TX[7] = (uint8_t)((fileSize>>16)&0xFF);
+
         stopAdr = startAdr + fileSize;
         writeData(BUF_TX, &startAdr, &stopAdr);
 
@@ -282,6 +306,8 @@ void MainWindow::loadToFile()
             readBuf.append(buf[i]);
         }
 
+        ui->progressBar->setValue(0);
+        ui->progressBarWrite->setValue(0);
         writeData1(readBuf);
 
     }

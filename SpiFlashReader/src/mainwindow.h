@@ -18,7 +18,7 @@
 #define READ_DATA       0x0C
 #define WRITE_BYTE      0x0F
 #define WRITE_BUFFER    0x1F
-#define READ_           0x10
+#define PLAY_DATA       0x10
 
 namespace Ui {
 class MainWindow;
@@ -56,6 +56,7 @@ private slots:
     void valid_StopAdr();
     void saveToFile();
     void loadToFile();
+    void  playData();
 };
 
 #endif // MAINWINDOW_H

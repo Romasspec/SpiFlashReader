@@ -88,15 +88,26 @@ void serialPort::handleError(QSerialPort::SerialPortError error)
 }
 
 void serialPort::readInPort1()
-{
-//    QByteArray data;
-    dataRX.append(port1.readAll());
-//    outPort(data);
-    progres = (dataRX.size()* 100 )/ (stopAdr - startAdr) ;
-    if (progres >= 100) {
-        outPort(&dataRX);
+{    
+    if (read_fl) {
+        //    QByteArray data;
+        dataRX.append(port1.readAll());
+        //    outPort(data);
+        progres = (dataRX.size()* 100 )/ (stopAdr - startAdr) ;
+        if (progres >= 100) {
+            outPort(&dataRX);
+        }
+        outProgress(progres);
+    } else {
+        qDebug () << "readtemp";
+        tempdataRX += port1.readAll();
+        qDebug () << tempdataRX;
+        if(tempdataRX.toStdString() == "NEXT") {
+            writedatanext();
+        }
+
     }
-    outProgress(progres);
+
 }
 
 void serialPort::writeToPort1(QByteArray data, int *startAdr1, int *stopAdr1)
@@ -105,6 +116,7 @@ void serialPort::writeToPort1(QByteArray data, int *startAdr1, int *stopAdr1)
     dataRX.clear();
     startAdr = *startAdr1;
     stopAdr = *stopAdr1;
+    read_fl = 1;
 
     qDebug () << startAdr << stopAdr;
 
@@ -120,20 +132,39 @@ void serialPort::writeToPort1(QByteArray data, int *startAdr1, int *stopAdr1)
 
 void serialPort::writedataToPort1(QByteArray data)
 {
+    qDebug () << "writedataToPort1";
+    dataTX = data;
     dataRX.clear();
-    int ncykl = data.size() / 32;
-    int last = data.size() % 32;
-    int i = 0;
+    ncykl = data.size() / 32;
+    last = data.size() % 32;
+    read_fl = 0;
+    nextbyte = 0;
+    writedatanext();
+}
 
+void serialPort::writedatanext()
+{
+    qDebug () << "writedatanext";
+    int end = 0;
+    tempdataRX.clear();
     if(port1.isOpen()) {
-
-       while(i < ncykl) {
-           port1.write((data.data() + i*32),32);
-           i++;
-           QThread::msleep(20);
+       if(nextbyte < ncykl) {
+           port1.write(dataTX.data() + (nextbyte*32),32);
+           //qDebug () << *(dataTX.data() + (32*5));
+           nextbyte++;
+       } else {
+          read_fl = 1;
+          dataRX.clear();
+          port1.write(dataTX.data() + (ncykl*32),last);
+          end = last;
        }
 
-        port1.write((data.data() + ncykl*32),last);
-
     }
+
+    progresWr = ((nextbyte*32+end)*100 )/ (ncykl*32 + last) ;
+    outProgressWrite(progresWr);
+    if (progresWr >= 100){
+        progresWr = 0;
+    }
+
 }
